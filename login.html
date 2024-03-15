@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best team Login</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="login-box">
+    <img src="img.png">
+    <form id="login-form">
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button type="submit">로그인</button>
+    </form>
+    <p class="forgot-password">비밀번호를 잊어버렸나요?</p>
+    <p class="signup">계정이 없으신가요? <a href="signup.html">회원가입</a></p>
+  </div>
+</div>
+
+<script type="module">
+  // Import Firebase modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2aoOXeoe8KXbqzo_Du1yfilCQkqi03wM",
+    authDomain: "besteam-e5d45.firebaseapp.com",
+    projectId: "besteam-e5d45",
+    storageBucket: "besteam-e5d45.appspot.com",
+    messagingSenderId: "1007108211259",
+    appId: "1:1007108211259:web:24136c60d32ffc5261521e",
+    measurementId: "G-KV7E75RSQZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+
+  // Function to handle form submission
+  document.getElementById("login-form").addEventListener("submit", function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Get email and password values from form
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    // Sign in with email and password
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // User signed in
+        const user = userCredential.user;
+        console.log("User signed in:", user);
+        
+        // Redirect to user page upon successful login
+        window.location.href = "user_page.html"; // Replace "user_page.html" with your actual user page URL
+      })
+      .catch((error) => {
+        // Handle errors
+        const errorMessage = error.message;
+        console.error("Login error:", errorMessage);
+        alert("로그인 오류입니다.")
+        // Handle specific error codes if needed
+      });
+  });
+</script>
+
+</body>
+</html>

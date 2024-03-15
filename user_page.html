@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Page</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="user-box">
+    <h1 id="welcome-message"></h1>
+    <p id="user-email"></p>
+    <p>최고조 비밀의 방에 오신 것을 환영합니다.</p>
+  </div>
+</div>
+
+<script type="module">
+  // Import Firebase modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2aoOXeoe8KXbqzo_Du1yfilCQkqi03wM",
+    authDomain: "besteam-e5d45.firebaseapp.com",
+    projectId: "besteam-e5d45",
+    storageBucket: "besteam-e5d45.appspot.com",
+    messagingSenderId: "1007108211259",
+    appId: "1:1007108211259:web:24136c60d32ffc5261521e",
+    measurementId: "G-KV7E75RSQZ"
+  };
+
+  // Initialize Firebase app
+  const firebaseApp = initializeApp(firebaseConfig);
+
+  // Get Auth object
+  const auth = getAuth(firebaseApp);
+
+  // Listen for authentication state changes
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in, display welcome message
+      const displayName = user.displayName;
+      const email = user.email;
+      const msg = email + "님 환영합니다.";
+      alert(msg);
+    } else {
+      // User is signed out
+      // You can handle this case if needed
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best team Signup</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="signup-box">
+    <img src="img.png" class="logo">
+    <form id="signup-form">
+      <input type="email" id="email" name="email" placeholder="Email" required>
+      <input type="password" id="password" name="password" placeholder="Password" required>
+      <button type="submit" id="signup-button">회원가입</button>
+    </form>
+    <p class="signup">이미 계정이 있으신가요? <a href="login.html">로그인하기</a></p>
+  </div>
+</div>
+
+<div id="message" style="display: block;"></div>
+
+<script type="module">
+  // Import Firebase modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2aoOXeoe8KXbqzo_Du1yfilCQkqi03wM",
+    authDomain: "besteam-e5d45.firebaseapp.com",
+    projectId: "besteam-e5d45",
+    storageBucket: "besteam-e5d45.appspot.com",
+    messagingSenderId: "1007108211259",
+    appId: "1:1007108211259:web:24136c60d32ffc5261521e",
+    measurementId: "G-KV7E75RSQZ"
+  };
+
+  // Initialize Firebase app
+  const app = initializeApp(firebaseConfig);
+  
+  // Function to handle form submission
+  document.getElementById("signup-form").addEventListener("submit", async function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Get email and password values from form
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      // Create user with email and password
+      const userCredential = await createUserWithEmailAndPassword(getAuth(), email, password);
+      
+      // User signed in
+      const user = userCredential.user;
+      console.log("User signed up:", user);
+      
+      // Show success message
+      const messageElement = document.getElementById("message");
+      messageElement.textContent = "회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.";
+      alert("회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.");
+      
+      // Redirect to login page after showing the message
+      setTimeout(function() {
+        window.location.href = "login.html";
+      }, 3000); // Redirect after 3 seconds (adjust as needed)
+
+    } catch (error) {
+      // Handle errors
+      const errorMessage = error.message;
+      console.error("Signup error:", errorMessage);
+      
+      // Show error message
+      const messageElement = document.getElementById("message");
+      messageElement.textContent = "회원가입에 실패했습니다: " + errorMessage;
+      alert("비밀번호는 6자리 이상이어야 합니다.");
+    }
+  });
+</script>
+
+</body>
+</html>
