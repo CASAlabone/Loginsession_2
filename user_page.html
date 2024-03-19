@@ -11,7 +11,6 @@
   <div class="user-box">
     <h1 id="welcome-message"></h1>
     <p id="user-email"></p>
-    <p>최고조 비밀의 방에 오신 것을 환영합니다.</p>
   </div>
 </div>
 
@@ -50,6 +49,49 @@
       // You can handle this case if needed
     }
   });
+</script>
+
+<style>
+  body {
+      background: black;
+      height: 8000px;
+      font-family: 'nanumsquare';
+  }
+div {
+  margin-top: 500px;
+  color: white;
+  text-align:center;
+  opacity: 0;
+  transition: all 0.7s;
+}
+</style>
+
+<div><h1>환영합니다!</h1></div>
+<div><h1>AI그림일기는 인공지능이 당신의 감정을 그림으로 표현해줍니다.</h1></div>
+<div><h1>그리고 만들어진 그림을 소셜 미디어에서 친구들과 공유도 할 수 있습니다.</h1></div>
+<div><h1>당신의 오늘의 하루를 완성해보세요!</h1></div>
+<div><img src="image.png"></div>
+
+<script>
+  let observer = new IntersectionObserver((e)=>{
+      e.forEach((박스)=>{
+          if(박스.isIntersecting){
+              박스.target.style.opacity = 1;
+
+          } 
+          else {박스.target.style.opacity = 0;
+          }
+      })
+  })
+
+  let div = document.querySelectorAll('div')
+  observer.observe(div[0])
+  observer.observe(div[1])
+  observer.observe(div[2])
+  observer.observe(div[3])
+  observer.observe(div[4])
+
+
 </script>
 
 </body>
