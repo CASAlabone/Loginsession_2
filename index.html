@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-image: url('intro.jpg'); /* Set background image */
+    background-size: cover;
+    color: white; /* Set font color to white */
+  }
+
+  h1 {
+    font-size: 72px; /* Adjust the font size as needed */
+    opacity: 0; /* Initially set opacity to 0 */
+    animation: fadeIn 2s forwards; /* Add fade-in animation */
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; } /* Start with opacity 0 */
+    to { opacity: 1; } /* Fade in to full opacity */
+  }
+
+  #loading-bar {
+    display: none;
+    width: 0%; /* Initial width set to 0 */
+    height: 5px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #3498db;
+    z-index: 9999;
+    transition: width 2s; /* Animation duration set to 2 seconds */
+  }
+</style>
+</head>
+<body>
+<h1>당신의 하루를 그려보세요</h1>
+
+<div id="loading-bar"></div>
+
+<script>
+  // Show loading bar
+  const loadingBar = document.getElementById("loading-bar");
+  loadingBar.style.display = "block";
+
+  // Redirect after 3 seconds
+  setTimeout(() => {
+    window.location.href = "login.html";
+  }, 3000);
+</script>
+
+</body>
+</html>
