@@ -5,19 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>User Page</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  body {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    height: 100vh;
+    margin: 0;
+  }
+
+  #top {
+    grid-row: 1;
+    grid-column: 1 / span 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #f0f0f0;
+  }
+
+  #left {
+    grid-row: 2;
+    grid-column: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+
+  #right {
+    grid-row: 2;
+    grid-column: 2;
+    padding: 20px;
+    background-color: #ffffff;
+  }
+
+  .logout-btn {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .logout-btn:hover {
+    background-color: #2980b9;
+  }
+
+  #newsfeed {
+    margin-bottom: 20px;
+  }
+
+  .post {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+  .post-title {
+    font-weight: bold;
+  }
+
+  .post-body {
+    margin-top: 5px;
+  }
+</style>
 </head>
 <body>
-<div class="container">
+<div id="top">
   <div class="user-box">
     <h1 id="welcome-message"></h1>
     <p id="user-email"></p>
   </div>
+  <button class="logout-btn" id="logout-btn">로그아웃</button>
+</div>
+
+<div id="left">
+  <h2>뉴스피드</h2>
+  <div id="posts-list"></div>
+</div>
+
+<div id="right">
+  <h2>게시물 작성</h2>
+  <form id="post-form">
+    <label for="post-title">제목:</label><br>
+    <input type="text" id="post-title" name="post-title"><br>
+    <label for="post-body">내용:</label><br>
+    <textarea id="post-body" name="post-body"></textarea><br><br>
+    <button type="submit" id="post-submit">게시</button>
+  </form>
 </div>
 
 <script type="module">
   // Import Firebase modules
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
   // Initialize Firebase
   const firebaseConfig = {
@@ -36,62 +121,78 @@
   // Get Auth object
   const auth = getAuth(firebaseApp);
 
+  // Get Firestore object
+  const db = getFirestore(firebaseApp);
+
+  // Function to fetch and display posts
+  async function fetchAndDisplayPosts() {
+    const postsList = document.getElementById("posts-list");
+    postsList.innerHTML = ""; // Clear existing posts
+    const querySnapshot = await getDocs(collection(db, "posts"));
+    querySnapshot.forEach((doc) => {
+      const postData = doc.data();
+      const postElement = document.createElement("div");
+      postElement.classList.add("post");
+      postElement.innerHTML = `
+        <div class="post-title">${postData.title}</div>
+        <div class="post-body">${postData.body}</div>
+      `;
+      postsList.appendChild(postElement);
+    });
+  }
+
   // Listen for authentication state changes
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // User is signed in, display welcome message
       const displayName = user.displayName;
       const email = user.email;
-      const msg = email + "님 환영합니다.";
-      alert(msg);
+      const msg = email + " 계정으로 로그인 됨";
+      document.getElementById("user-email").innerText = msg;
     } else {
       // User is signed out
-      // You can handle this case if needed
+      // Redirect to login page
+      window.location.href = "login.html";
     }
   });
-</script>
 
-<style>
-  body {
-      background: black;
-      height: 8000px;
-      font-family: 'nanumsquare';
-  }
-div {
-  margin-top: 500px;
-  color: white;
-  text-align:center;
-  opacity: 0;
-  transition: all 0.7s;
-}
-</style>
+  // Add event listener to logout button
+  const logoutBtn = document.getElementById("logout-btn");
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      console.log("User signed out successfully.");
+      // Redirect to login page
+      window.location.href = "login.html";
+    }).catch((error) => {
+      console.error("Error signing out:", error);
+    });
+  });
 
-<div><h1>환영합니다!</h1></div>
-<div><h1>AI그림일기는 인공지능이 당신의 감정을 그림으로 표현해줍니다.</h1></div>
-<div><h1>그리고 만들어진 그림을 소셜 미디어에서 친구들과 공유도 할 수 있습니다.</h1></div>
-<div><h1>당신의 오늘의 하루를 완성해보세요!</h1></div>
-<div><img src="image.png"></div>
+  // Add event listener to post form
+  const postForm = document.getElementById("post-form");
+  postForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("post-title").value;
+    const body = document.getElementById("post-body").value;
+    try {
+      const docRef = await addDoc(collection(db, "posts"), {
+        title,
+        body,
+        createdAt: new Date()
+      });
+      console.log("Document written with ID: ", docRef.id);
+      // Clear form fields
+      document.getElementById("post-title").value = "";
+      document.getElementById("post-body").value = "";
+      // Refresh the newsfeed
+      fetchAndDisplayPosts();
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
+  });
 
-<script>
-  let observer = new IntersectionObserver((e)=>{
-      e.forEach((박스)=>{
-          if(박스.isIntersecting){
-              박스.target.style.opacity = 1;
-
-          } 
-          else {박스.target.style.opacity = 0;
-          }
-      })
-  })
-
-  let div = document.querySelectorAll('div')
-  observer.observe(div[0])
-  observer.observe(div[1])
-  observer.observe(div[2])
-  observer.observe(div[3])
-  observer.observe(div[4])
-
-
+  // Initial fetch and display of posts
+  fetchAndDisplayPosts();
 </script>
 
 </body>
