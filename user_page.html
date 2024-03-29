@@ -55,6 +55,7 @@
 
   #newsfeed {
     margin-bottom: 20px;
+    width: 200px;
   }
 
   .post {
@@ -70,6 +71,7 @@
 
   .post-body {
     margin-top: 5px;
+    width: 500px;
   }
 </style>
 </head>
@@ -90,19 +92,38 @@
 <div id="right">
   <h2>게시물 작성</h2>
   <form id="post-form">
-    <label for="post-title">제목:</label><br>
-    <input type="text" id="post-title" name="post-title"><br>
-    <label for="post-body">내용:</label><br>
+    <label for="post-body">POST</label><br>
     <textarea id="post-body" name="post-body"></textarea><br><br>
     <button type="submit" id="post-submit">게시</button>
   </form>
+
+  <h2>Image Generation</h2>
+  <form id="image-form">
+    <label for="user-input">Enter Your Text:</label><br>
+    <input type="text" id="user-input" name="user-input"><br>
+    <label for="style-option">Select Image Style:</label><br>
+    <select id="style-option" name="style-option">
+      <option value="Japanese Cartoon">Japanese Cartoon</option>
+      <option value="Realistic">Realistic</option>
+      <option value="3D modeling">3D modeling</option>
+      <option value="Animation">Animation</option>
+      <option value="Pencil Drawing">Pencil Drawing</option>
+      <option value="Watercolor">Watercolor</option>
+    </select><br><br>
+    <button type="submit" id="generate-image">Generate Image</button>
+  </form>
+
+  <div id="generated-image"></div>
 </div>
+
+
 
 <script type="module">
   // Import Firebase modules
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { getDatabase, ref, push, update } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
   // Initialize Firebase
   const firebaseConfig = {
@@ -124,22 +145,46 @@
   // Get Firestore object
   const db = getFirestore(firebaseApp);
 
+  // Get Realtime Database object
+  const database = getDatabase(firebaseApp);
+
   // Function to fetch and display posts
-  async function fetchAndDisplayPosts() {
-    const postsList = document.getElementById("posts-list");
-    postsList.innerHTML = ""; // Clear existing posts
-    const querySnapshot = await getDocs(collection(db, "posts"));
-    querySnapshot.forEach((doc) => {
-      const postData = doc.data();
-      const postElement = document.createElement("div");
-      postElement.classList.add("post");
-      postElement.innerHTML = `
-        <div class="post-title">${postData.title}</div>
-        <div class="post-body">${postData.body}</div>
-      `;
-      postsList.appendChild(postElement);
+  // Function to fetch and display posts
+async function fetchAndDisplayPosts() {
+  const postsList = document.getElementById("posts-list");
+  postsList.innerHTML = ""; // Clear existing posts
+  const querySnapshot = await getDocs(collection(db, "posts"));
+  querySnapshot.forEach((doc) => {
+    const postData = doc.data();
+    const postElement = document.createElement("div");
+    postElement.classList.add("post");
+    const postTime = postData.createdAt.toDate().toLocaleString(); // Convert Firebase timestamp to local time string
+    postElement.innerHTML = `
+      <div class="post-title">${postData.title}</div>
+      <div class="post-body">${postData.body}</div>
+      <div class="post-info">Posted by ${postData.author} at ${postTime} (${postData.authorEmail})</div>
+      <button class="remove-btn" data-post-id="${doc.id}">삭제</button>
+    `;
+    postsList.appendChild(postElement);
+  });
+
+  // Add event listener to remove buttons
+  const removeButtons = document.querySelectorAll(".remove-btn");
+  removeButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const postId = button.getAttribute("data-post-id");
+      await deletePost(postId);
+      fetchAndDisplayPosts(); // Refresh the newsfeed after removing the post
     });
-  }
+  });
+}
+
+// Function to delete a post from the database
+async function deletePost(postId) {
+  await deleteDoc(doc(db, "posts", postId));
+}
+
+
 
   // Listen for authentication state changes
   onAuthStateChanged(auth, (user) => {
@@ -172,27 +217,68 @@
   const postForm = document.getElementById("post-form");
   postForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const title = document.getElementById("post-title").value;
-    const body = document.getElementById("post-body").value;
-    try {
-      const docRef = await addDoc(collection(db, "posts"), {
-        title,
-        body,
-        createdAt: new Date()
-      });
-      console.log("Document written with ID: ", docRef.id);
-      // Clear form fields
-      document.getElementById("post-title").value = "";
-      document.getElementById("post-body").value = "";
-      // Refresh the newsfeed
-      fetchAndDisplayPosts();
-    } catch (error) {
-      console.error("Error adding document: ", error);
+    const postBody = document.getElementById("post-body").value.trim();
+    if (postBody !== "") {
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+        const userName = user.displayName;
+        // Call the writeNewPost function to add the post to the database
+        await writeNewPost(userId, userName, '', '', postBody);
+        // Clear the input field after posting
+        document.getElementById("post-body").value = "";
+        // Refresh the newsfeed to display the newly added post
+        fetchAndDisplayPosts();
+      } else {
+        console.error("User not logged in.");
+      }
+    } else {
+      console.error("Post body cannot be empty.");
     }
   });
 
+  // Function to write a new post to the database
+  async function writeNewPost(uid, username, picture, title, body) {
+    await addDoc(collection(db, "posts"), {
+      author: username,
+      uid: uid,
+      body: body,
+      title: title,
+      starCount: 0,
+      authorPic: picture,
+      createdAt: new Date()
+    });
+  }
+
   // Initial fetch and display of posts
   fetchAndDisplayPosts();
+
+
+
+
+  const imageForm = document.getElementById("image-form");
+  imageForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const userInput = document.getElementById("user-input").value.trim();
+    const styleOption = document.getElementById("style-option").value;
+    const data = new FormData();
+    data.append('user_input', userInput);
+    data.append('style_option', styleOption);
+
+    try {
+      const response = await fetch('/generate_image', {
+        method: 'POST',
+        body: data
+      });
+      const imageData = await response.blob();
+      const imageUrl = URL.createObjectURL(imageData);
+      const imageElement = document.createElement('img');
+      imageElement.src = imageUrl;
+      document.getElementById('generated-image').appendChild(imageElement);
+    } catch (error) {
+      console.error('Error generating image:', error);
+    }
+  });
 </script>
 
 </body>
