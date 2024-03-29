@@ -257,28 +257,28 @@ async function deletePost(postId) {
 
 
   const imageForm = document.getElementById("image-form");
-  imageForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const userInput = document.getElementById("user-input").value.trim();
-    const styleOption = document.getElementById("style-option").value;
-    const data = new FormData();
-    data.append('user_input', userInput);
-    data.append('style_option', styleOption);
+imageForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const userInput = document.getElementById("user-input").value.trim();
+  const styleOption = document.getElementById("style-option").value;
+  
+  // Placeholder image URLs
+  const placeholderImages = [
+    "https://via.placeholder.com/150",
+    "https://via.placeholder.com/200",
+    "https://via.placeholder.com/250",
+    // Add more placeholder image URLs as needed
+  ];
 
-    try {
-      const response = await fetch('/generate_image', {
-        method: 'POST',
-        body: data
-      });
-      const imageData = await response.blob();
-      const imageUrl = URL.createObjectURL(imageData);
-      const imageElement = document.createElement('img');
-      imageElement.src = imageUrl;
-      document.getElementById('generated-image').appendChild(imageElement);
-    } catch (error) {
-      console.error('Error generating image:', error);
-    }
-  });
+  // Randomly select an image URL from the array
+  const randomImageUrl = placeholderImages[Math.floor(Math.random() * placeholderImages.length)];
+  
+  // Create and append the image element to the news feed
+  const imageElement = document.createElement('img');
+  imageElement.src = randomImageUrl;
+  document.getElementById('posts-list').appendChild(imageElement);
+});
+
 </script>
 
 </body>
